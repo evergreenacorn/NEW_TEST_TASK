@@ -39,9 +39,10 @@ class ViewInfo(models.Model):
 
 class Page(ModelInfo):
     """
-
-    Args:
-        ModelInfo ([type]): [description]
+    Модель Страница
+    Аргументы:
+        title (CharField(255)): Название страницы
+        slug (SlugField(160)):  Слаг-поле
     """
     title = models.CharField(max_length=255, null=False, blank=False)
     slug = models.SlugField(max_length=160, unique=True)
