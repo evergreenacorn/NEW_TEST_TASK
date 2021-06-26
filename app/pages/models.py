@@ -4,17 +4,23 @@ from django.contrib.auth import User
 
 
 # Create your models here.
-class ModelInfo(models.Model):
+class RecordInfo(models.Model):
     """
     Абстрактная модель
-    Информация о создании/обновлении модели
+    Информация о создании/обновлении записи
 
     Аргументы:
+        title (CharField(255)):     Название
         created_at (DateTimeField): Дата создания
         udated_at (DateTimeField):  Дата модификации
         created_by (ForeignKey):    Создано пользователем
         updated_by (ForeignKey):    Обновлено пользователем
     """
+    title =      models.CharField(
+        max_length=255,
+        null=False,
+        blank=False
+    )
     created_at = models.DateTimeField(default=now)
     updated_at = models.DateTimeField(null=True)
     created_by = models.ForeignKey(User)
@@ -41,10 +47,8 @@ class Page(ModelInfo):
     """
     Модель Страница
     Аргументы:
-        title (CharField(255)): Название страницы
         slug (SlugField(160)):  Слаг-поле
     """
-    title = models.CharField(max_length=255, null=False, blank=False)
     slug = models.SlugField(max_length=160, unique=True)
 
 
