@@ -1,21 +1,22 @@
-from django.db import models
-from datetime.datetime import now
-from django.contrib.auth import User
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth import User
+from django.core.exceptions import ValidationError
+from datetime.datetime import now
+from django.db import models
 
 
 CONTENTTYPES_DIRS = {
     "video_file": {
-        "remote": "contenttypes/video/files/remote/",
-        "local": "contenttypes/video/files/local/"
+        "remote": "contenttypes/video/files/remote/%Y/%m/%d/",
+        "local": "contenttypes/video/files/local/%Y/%m/%d/"
     },
     "video_subtitles": {
-        "remote": "contenttypes/video_subtitles/files/remote/",
-        "local": "contenttypes/video_subtitles/files/local/"
+        "remote": "contenttypes/video_subtitles/files/remote/%Y/%m/%d/",
+        "local": "contenttypes/video_subtitles/files/local/%Y/%m/%d/"
     },
     "audio_file": {
-        "remote": "contenttypes/audio/files/remote/",
-        "local": "contenttypes/audio/files/local/"
+        "remote": "contenttypes/audio/files/remote/%Y/%m/%d/",
+        "local": "contenttypes/audio/files/local/%Y/%m/%d/"
     }
 }
 
@@ -89,29 +90,27 @@ class ContentTypeVideo(ModelInfo, ViewInfo):
     """
     video_file_path = models.FileField(
         _("Local video file"),
-        upload_to=None,
+        upload_to=CONTENTTYPES_DIRS["video_file"]["local"],
         null=True,
         blank=True
     )
     video_file_link = models.URLField(
         _("Remote video file"),
         max_length=500,
-        upload_to=None,
+        upload_to=CONTENTTYPES_DIRS["video_file"]["remote"],
         null=True,
         blank=True
     )
     subtitles_file_path = models.FileField(
         _("Local subtitles file"),
-        upload_to=None,
+        upload_to=CONTENTTYPES_DIRS["video_subtitles"]["local"],
         null=True,
         blank=True
     )
     subtitles_file_link = models.URLField(
         _("Remote subtitles file"),
         max_length=500,
-        upload_to="contenttypes/video/subtitles/%s/%s/%Y-%m-%d/" % (
-            self.created_by.username, self.title
-        ),
+        upload_to=CONTENTTYPES_DIRS["video_subtitles"]["remote"],
         null=True,
         blank=True
     )
@@ -120,11 +119,18 @@ class ContentTypeVideo(ModelInfo, ViewInfo):
         """Вызываем ValidationError, если указана ссылка
         как на локальный файл, так и на удаленный
         """
-        pass
+        super().clean()
+        if (
+            (
+                self.video_file_path is not None and self.video_file_link is not None
+            ) or (
+                self.subtitles_file_path is not None and self.subtitles_file_link
+            )
+        ):
+            raise ValidationError(
+                "Any field with postfix _path cant exists with a same prefix but with postfix _link"
+            )
 
-    @classmethod
-    def user_directory_path(cls):
-        return ''
 
 # class ContentTypeAudio(ModelInfo, ViewInfo):
 #     file_link
