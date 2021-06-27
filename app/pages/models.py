@@ -1,23 +1,16 @@
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth import User
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from datetime.datetime import now
+from datetime import datetime
 from django.db import models
 
 
 CONTENTTYPES_DIRS = {
-    "video_file": {
-        "remote": "contenttypes/video/files/remote/%Y/%m/%d/",
-        "local": "contenttypes/video/files/local/%Y/%m/%d/"
-    },
-    "video_subtitles": {
-        "remote": "contenttypes/video_subtitles/files/remote/%Y/%m/%d/",
-        "local": "contenttypes/video_subtitles/files/local/%Y/%m/%d/"
-    },
-    "audio_file": {
-        "remote": "contenttypes/audio/files/remote/%Y/%m/%d/",
-        "local": "contenttypes/audio/files/local/%Y/%m/%d/"
-    }
+    "video_file": "contenttypes/video/files/local/%Y/%m/%d/"
+    ,
+    "video_subtitles": "contenttypes/video_subtitles/files/local/%Y/%m/%d/"
+    ,
+    "audio_file": "contenttypes/audio/files/local/%Y/%m/%d/"
 }
 
 
@@ -41,10 +34,18 @@ class RecordInfo(models.Model):
         null=False,
         blank=False
     )
-    created_at = models.DateTimeField(_("Created at"), default=now)
+    created_at = models.DateTimeField(_("Created at"), default=datetime.now)
     updated_at = models.DateTimeField(_("Updated at"), null=True)
-    created_by = models.ForeignKey(User, verbose_name=_("Created by user"))
-    updated_by = models.ForeignKey(User, verbose_name=_("Updated by user"))
+    created_by = models.ForeignKey(
+        User,
+        verbose_name=_("Created by user"),
+        on_delete=models.CASCADE
+    )
+    updated_by = models.ForeignKey(
+        User,
+        verbose_name=_("Updated by user"),
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         abstract = True
@@ -63,24 +64,21 @@ class ViewInfo(models.Model):
         abstract = True
 
 
-class Page(ModelInfo):
-    """
-    Модель Страница
+class ContenttypeSpecialOrder(models.Model):
+    """Абстрактная модель для _ContentType - моделей
+    для возможности назначения порядкового номера
+    записи по умолчанию.
+
     Аргументы:
-        slug (SlugField(160)):  Слаг-поле
+        serial_number (IntegerField): Порядковый номер
     """
-    slug = models.SlugField(max_length=160, populate_from="title")
+    serial_number = models.IntegerField("Serial number")
 
     class Meta:
-        verbose_name = _("Page")
-        verbose_name_plural = _("Pages")
-        unique_together = ('slug', 'title')
-
-    def __str__(self):
-        return "%s: %s" % (self.pk, self.title)
+        abstract = True
 
 
-class ContentTypeVideo(ModelInfo, ViewInfo):
+class ContentTypeVideo(RecordInfo, ViewInfo, ContenttypeSpecialOrder):
     """
     Модель Контент типа видео
 
@@ -90,30 +88,35 @@ class ContentTypeVideo(ModelInfo, ViewInfo):
     """
     video_file_path = models.FileField(
         _("Local video file"),
-        upload_to=CONTENTTYPES_DIRS["video_file"]["local"],
+        upload_to=CONTENTTYPES_DIRS["video_file"],
         null=True,
         blank=True
     )
     video_file_link = models.URLField(
         _("Remote video file"),
         max_length=500,
-        upload_to=CONTENTTYPES_DIRS["video_file"]["remote"],
         null=True,
         blank=True
     )
     subtitles_file_path = models.FileField(
         _("Local subtitles file"),
-        upload_to=CONTENTTYPES_DIRS["video_subtitles"]["local"],
+        upload_to=CONTENTTYPES_DIRS["video_subtitles"],
         null=True,
         blank=True
     )
     subtitles_file_link = models.URLField(
         _("Remote subtitles file"),
         max_length=500,
-        upload_to=CONTENTTYPES_DIRS["video_subtitles"]["remote"],
         null=True,
         blank=True
     )
+
+    class Meta:
+        verbose_name = _("Content type video")
+        verbose_name_plural = _("Content types video")
+
+    def __str__(self):
+        return '%s: %s' % (self.pk, self.title)
 
     def clean(self):
         """Вызываем ValidationError, если указана ссылка
@@ -132,10 +135,85 @@ class ContentTypeVideo(ModelInfo, ViewInfo):
             )
 
 
-# class ContentTypeAudio(ModelInfo, ViewInfo):
-#     file_link
-#     bitrate
+class ContentTypeAudio(RecordInfo, ViewInfo, ContenttypeSpecialOrder):
+
+    file_local_path = models.FileField(
+        _("Local audio file"),
+        upload_to=CONTENTTYPES_DIRS["audio_file"],
+        null=True,
+        blank=True
+    )
+    file_link = models.URLField(
+        _("Remote audio file"),
+        max_length=500,
+        null=True,
+        blank=True
+    )
+    bitrate = models.IntegerField(
+        _("Bits in a second"),
+        null=False,
+        blank=False
+    )
+
+    class Meta:
+        verbose_name = _("Content type audio")
+        verbose_name_plural = _("Content types audio")
+
+    def __str__(self):
+        return '%s: %s' % (self.pk, self.title)
 
 
-# class ContentTypeText(ModelInfo, ViewInfo):
-#     text
+class ContentTypeText(RecordInfo, ViewInfo, ContenttypeSpecialOrder):
+    text = models.TextField(_("Text field"))
+
+    class Meta:
+        verbose_name = _("Content type text")
+        verbose_name_plural = _("Content types text")
+
+    def __str__(self):
+        return '%s: %s' % (self.pk, self.title)
+
+
+class Page(RecordInfo):
+    """
+    Модель Страница
+    Аргументы:
+        slug (SlugField(160)):  Слаг-поле
+    """
+    slug = models.SlugField(
+        max_length=160,
+        unique=True,
+        # prepopulate_from=('title',)
+    )
+    video_content = models.ForeignKey(
+        ContentTypeVideo,
+        related_name="pages_video_content",
+        null=True,
+        blank=True,
+        verbose_name="Video content",
+        on_delete=models.CASCADE
+    )
+    audio_content = models.ForeignKey(
+        ContentTypeAudio,
+        related_name="pages_audio_content",
+        null=True,
+        blank=True,
+        verbose_name="Audio content",
+        on_delete=models.CASCADE
+    )
+    text_content = models.ForeignKey(
+        ContentTypeText,
+        related_name="pages_text_content",
+        null=True,
+        blank=True,
+        verbose_name="Video content",
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = _("Page")
+        verbose_name_plural = _("Pages")
+        unique_together = ('slug', 'title')
+
+    def __str__(self):
+        return "%s: %s" % (self.pk, self.title)
