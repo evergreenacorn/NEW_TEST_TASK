@@ -23,7 +23,7 @@ class ViewInfo(models.Model):  # Abstract
         view_counter (IntegerField): Кол-во просмотров
     """
     title = models.CharField(max_length=160)
-    view_counter = models.IntegerField(_("Number of views"), default=0)
+    view_counter = models.PositiveIntegerField(_("Number of views"), default=0)
 
     class Meta:
         abstract = True
@@ -37,7 +37,7 @@ class ContenttypeSpecialOrder(models.Model):  # Abstract
     Аргументы:
         serial_number (IntegerField): Порядковый номер
     """
-    serial_number = models.IntegerField("Serial number")
+    serial_number = models.PositiveIntegerField(_("Serial number"))
 
     class Meta:
         abstract = True
