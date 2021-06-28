@@ -22,7 +22,7 @@ class ViewInfo(models.Model):  # Abstract
     Аргументы:
         view_counter (IntegerField): Кол-во просмотров
     """
-    title = models.CharField(max_length=160)
+    title = models.CharField(_("Title"), max_length=160)
     view_counter = models.PositiveIntegerField(_("Number of views"), default=0)
 
     class Meta:

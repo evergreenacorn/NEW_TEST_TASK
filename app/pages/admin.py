@@ -52,7 +52,7 @@ class PageAdmin(SimpleHistoryAdmin):
 
 class VideoContentAdmin(SimpleHistoryAdmin):
     search_fields = ("title",)
-    readonly_fields = ["view_counter",]
+    readonly_fields = ("view_counter",)
 
 
 class AudioContentAdmin(SimpleHistoryAdmin):
