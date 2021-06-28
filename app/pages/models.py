@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from simple_history import register
 from datetime import datetime
 from django.db import models
 
@@ -14,57 +15,21 @@ CONTENTTYPES_DIRS = {
 }
 
 
-# Create your models here.
-class RecordInfo(models.Model):
-    """
-    Абстрактная модель
-    Информация о создании/обновлении записи
-
-    Аргументы:
-        title (CharField(255)):     Название
-        created_at (DateTimeField): Дата создания
-        udated_at (DateTimeField):  Дата модификации
-        created_by (ForeignKey):    Создано пользователем
-        updated_by (ForeignKey):    Обновлено пользователем
-    """
-    title = models.CharField(
-        _("Title"),
-        max_length=255,
-        unique=True,
-        null=False,
-        blank=False
-    )
-    created_at = models.DateTimeField(_("Created at"), default=datetime.now)
-    updated_at = models.DateTimeField(_("Updated at"), null=True)
-    created_by = models.ForeignKey(
-        User,
-        verbose_name=_("Created by user"),
-        on_delete=models.CASCADE
-    )
-    updated_by = models.ForeignKey(
-        User,
-        verbose_name=_("Updated by user"),
-        on_delete=models.CASCADE
-    )
-
-    class Meta:
-        abstract = True
-
-
-class ViewInfo(models.Model):
+class ViewInfo(models.Model):  # Abstract
     """Абстрактная модель
     Информация о просмотрах
 
     Аргументы:
         view_counter (IntegerField): Кол-во просмотров
     """
+    title = models.CharField(max_length=160)
     view_counter = models.IntegerField(_("Number of views"))
 
     class Meta:
         abstract = True
 
 
-class ContenttypeSpecialOrder(models.Model):
+class ContenttypeSpecialOrder(models.Model):  # Abstract
     """Абстрактная модель для _ContentType - моделей
     для возможности назначения порядкового номера
     записи по умолчанию.
@@ -78,7 +43,7 @@ class ContenttypeSpecialOrder(models.Model):
         abstract = True
 
 
-class ContentTypeVideo(RecordInfo, ViewInfo, ContenttypeSpecialOrder):
+class ContentTypeVideo(ViewInfo, ContenttypeSpecialOrder):
     """
     Модель Контент типа видео
 
@@ -86,6 +51,7 @@ class ContentTypeVideo(RecordInfo, ViewInfo, ContenttypeSpecialOrder):
         ModelInfo ([type]): [description]
         ViewInfo ([type]): [description]
     """
+    # video_id = models.AutoField(primary_key=True)
     video_file_path = models.FileField(
         _("Local video file"),
         upload_to=CONTENTTYPES_DIRS["video_file"],
@@ -134,9 +100,19 @@ class ContentTypeVideo(RecordInfo, ViewInfo, ContenttypeSpecialOrder):
                 "Any field with postfix _path cant exists with a same prefix but with postfix _link"
             )
 
+    def save(self, *args, **kwargs):
+        super(ContentTypeVideo, self).save(*args, **kwargs)
 
-class ContentTypeAudio(RecordInfo, ViewInfo, ContenttypeSpecialOrder):
 
+class ContentTypeAudio(ViewInfo, ContenttypeSpecialOrder):
+    """
+    Модель Контент типа аудио
+
+    Аргументы:
+        file_local_path (FileField): ссылка на локальный файл
+        file_link (URLField):        ссылка на удаленный файл
+        bitrate (IntegerField):      битрейт кб/с
+    """
     file_local_path = models.FileField(
         _("Local audio file"),
         upload_to=CONTENTTYPES_DIRS["audio_file"],
@@ -162,8 +138,17 @@ class ContentTypeAudio(RecordInfo, ViewInfo, ContenttypeSpecialOrder):
     def __str__(self):
         return '%s: %s' % (self.pk, self.title)
 
+    def save(self, *args, **kwargs):
+        super(ContentTypeAudio, self).save(*args, **kwargs)
 
-class ContentTypeText(RecordInfo, ViewInfo, ContenttypeSpecialOrder):
+
+class ContentTypeText(ViewInfo, ContenttypeSpecialOrder):
+    """
+    Модель Контент типа текст
+
+    Аргументы:
+        text (TextField): текстовое поле
+    """
     text = models.TextField(_("Text field"))
 
     class Meta:
@@ -173,13 +158,17 @@ class ContentTypeText(RecordInfo, ViewInfo, ContenttypeSpecialOrder):
     def __str__(self):
         return '%s: %s' % (self.pk, self.title)
 
+    def save(self, *args, **kwargs):
+        super(ContentTypeText, self).save(*args, **kwargs)
 
-class Page(RecordInfo):
+
+class Page(models.Model):
     """
     Модель Страница
     Аргументы:
         slug (SlugField(160)):  Слаг-поле
     """
+    title = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(
         max_length=160,
         unique=True,
@@ -187,7 +176,7 @@ class Page(RecordInfo):
     )
     video_content = models.ForeignKey(
         ContentTypeVideo,
-        related_name="pages_video_content",
+        # related_name="pages_video_content",
         null=True,
         blank=True,
         verbose_name="Video content",
@@ -195,7 +184,7 @@ class Page(RecordInfo):
     )
     audio_content = models.ForeignKey(
         ContentTypeAudio,
-        related_name="pages_audio_content",
+        # related_name="pages_audio_content",
         null=True,
         blank=True,
         verbose_name="Audio content",
@@ -203,7 +192,7 @@ class Page(RecordInfo):
     )
     text_content = models.ForeignKey(
         ContentTypeText,
-        related_name="pages_text_content",
+        # related_name="pages_text_content",
         null=True,
         blank=True,
         verbose_name="Video content",
@@ -217,3 +206,10 @@ class Page(RecordInfo):
 
     def __str__(self):
         return "%s: %s" % (self.pk, self.title)
+
+
+for model in (
+    Page, ContentTypeVideo,
+    ContentTypeAudio, ContentTypeText
+):
+    register(model)
