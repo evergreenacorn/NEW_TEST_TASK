@@ -20,12 +20,15 @@ from pages import views
 
 
 router = DefaultRouter()
-router.register('api/v1', views.PageListDetailView)
+router.register('pages', views.PageModelViewset)
+router.register('content_videos', views.VideoModelViewset)
+router.register('content_audios', views.AudioModelViewset)
+router.register('text_videos', views.TextModelViewset)
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include(router.urls)),
+    path('api/v1/', include(router.urls)),
     # path('api/v1/', include('pages.urls')),
 ]
 
