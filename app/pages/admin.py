@@ -1,4 +1,5 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 from . import models
 
 
@@ -9,4 +10,4 @@ for model in (
     models.ContentTypeAudio,
     models.ContentTypeText
 ):
-    admin.site.register(model)
+    admin.site.register(model, SimpleHistoryAdmin)
