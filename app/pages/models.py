@@ -23,7 +23,7 @@ class ViewInfo(models.Model):  # Abstract
         view_counter (IntegerField): Кол-во просмотров
     """
     title = models.CharField(max_length=160)
-    view_counter = models.IntegerField(_("Number of views"))
+    view_counter = models.IntegerField(_("Number of views"), default=0)
 
     class Meta:
         abstract = True
@@ -41,6 +41,31 @@ class ContenttypeSpecialOrder(models.Model):  # Abstract
 
     class Meta:
         abstract = True
+
+
+class Page(models.Model):
+    """
+    Модель Страница
+    Аргументы:
+        slug (SlugField(160)):  Слаг-поле
+    """
+    title = models.CharField(
+        _("Title"),
+        max_length=200,
+        unique=True
+    )
+    slug = models.SlugField(
+        max_length=160,
+        unique=True,
+    )
+
+    class Meta:
+        verbose_name = _("Page")
+        verbose_name_plural = _("Pages")
+        unique_together = ('slug', 'title')
+
+    def __str__(self):
+        return "%s: %s" % (self.pk, self.title)
 
 
 class ContentTypeVideo(ViewInfo, ContenttypeSpecialOrder):
@@ -76,6 +101,13 @@ class ContentTypeVideo(ViewInfo, ContenttypeSpecialOrder):
         null=True,
         blank=True
     )
+    page = models.ForeignKey(
+        Page,
+        related_name="page_videos",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         verbose_name = _("Content type video")
@@ -93,7 +125,7 @@ class ContentTypeVideo(ViewInfo, ContenttypeSpecialOrder):
             (
                 self.video_file_path is not None and self.video_file_link is not None
             ) or (
-                self.subtitles_file_path is not None and self.subtitles_file_link
+                self.subtitles_file_path is not None and self.subtitles_file_link is not None
             )
         ):
             raise ValidationError(
@@ -112,6 +144,7 @@ class ContentTypeAudio(ViewInfo, ContenttypeSpecialOrder):
         file_local_path (FileField): ссылка на локальный файл
         file_link (URLField):        ссылка на удаленный файл
         bitrate (IntegerField):      битрейт кб/с
+        page (ForeignKey):           ссылка на запись страницы
     """
     file_local_path = models.FileField(
         _("Local audio file"),
@@ -130,6 +163,13 @@ class ContentTypeAudio(ViewInfo, ContenttypeSpecialOrder):
         null=False,
         blank=False
     )
+    page = models.ForeignKey(
+        Page,
+        related_name="page_audios",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         verbose_name = _("Content type audio")
@@ -137,6 +177,11 @@ class ContentTypeAudio(ViewInfo, ContenttypeSpecialOrder):
 
     def __str__(self):
         return '%s: %s' % (self.pk, self.title)
+
+    def clean(self):
+        super().clean()
+        if (self.file_local_path is not None and self.file_link is not None):
+            raise ValidationError("Any field with postfix _path cant exists with a same prefix but with postfix _link")
 
     def save(self, *args, **kwargs):
         super(ContentTypeAudio, self).save(*args, **kwargs)
@@ -147,9 +192,17 @@ class ContentTypeText(ViewInfo, ContenttypeSpecialOrder):
     Модель Контент типа текст
 
     Аргументы:
-        text (TextField): текстовое поле
+        text (TextField):   текстовое поле
+        page (ForeignKey):  ссылка на запись страницы
     """
     text = models.TextField(_("Text field"))
+    page = models.ForeignKey(
+        Page,
+        related_name="page_texts",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         verbose_name = _("Content type text")
@@ -160,52 +213,6 @@ class ContentTypeText(ViewInfo, ContenttypeSpecialOrder):
 
     def save(self, *args, **kwargs):
         super(ContentTypeText, self).save(*args, **kwargs)
-
-
-class Page(models.Model):
-    """
-    Модель Страница
-    Аргументы:
-        slug (SlugField(160)):  Слаг-поле
-    """
-    title = models.CharField(max_length=200, unique=True)
-    slug = models.SlugField(
-        max_length=160,
-        unique=True,
-        # prepopulate_from=('title',)
-    )
-    video_content = models.ForeignKey(
-        ContentTypeVideo,
-        # related_name="pages_video_content",
-        null=True,
-        blank=True,
-        verbose_name="Video content",
-        on_delete=models.CASCADE
-    )
-    audio_content = models.ForeignKey(
-        ContentTypeAudio,
-        # related_name="pages_audio_content",
-        null=True,
-        blank=True,
-        verbose_name="Audio content",
-        on_delete=models.CASCADE
-    )
-    text_content = models.ForeignKey(
-        ContentTypeText,
-        # related_name="pages_text_content",
-        null=True,
-        blank=True,
-        verbose_name="Video content",
-        on_delete=models.CASCADE
-    )
-
-    class Meta:
-        verbose_name = _("Page")
-        verbose_name_plural = _("Pages")
-        unique_together = ('slug', 'title')
-
-    def __str__(self):
-        return "%s: %s" % (self.pk, self.title)
 
 
 for model in (
