@@ -137,14 +137,6 @@ class ContentTypeVideo(ViewInfo, ContenttypeSpecialOrder):
     def clean(self):
         super().clean()
         if (
-            self.video_file_path is not None and
-            self.video_file_link is not None
-        ) or (
-            self.subtitles_file_path is not None and
-            self.subtitles_file_link is not None
-        ):
-            raise ValidationError(_("Any field with postfix _path cant exists with a same prefix but with postfix _link."))
-        elif (
             self.video_file_path is None and
             self.video_file_link is None
         ):
@@ -206,9 +198,9 @@ class ContentTypeAudio(ViewInfo, ContenttypeSpecialOrder):
         return '%s: %s' % (self.pk, self.title)
 
     def clean(self):
-        super().clean()
-        if (self.file_local_path is not None and self.file_link is not None):
-            raise ValidationError(_("Any field with postfix _path cant exists with a same prefix but with postfix _link"))
+        # super().clean()
+        if self.file_link is None and self.file_local_path is None:
+            raise ValidationError(_("One of the file link fields must be not empty."))
 
 
 class ContentTypeText(ViewInfo, ContenttypeSpecialOrder):
