@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from simple_history import register
 from datetime import datetime
 from django.db import models
+# from django.db.models import Q, CheckConstraint
 
 
 CONTENTTYPES_DIRS = {
@@ -110,6 +111,23 @@ class ContentTypeVideo(ViewInfo, ContenttypeSpecialOrder):
     )
 
     class Meta:
+        # constraints = [
+        #     CheckConstraint(
+        #         check=Q(video_file_path__isnull=False) | \
+        #         Q(video_file_link__isnull=False),
+        #         name="not_both_null_video_links"
+        #     ),
+        #     CheckConstraint(
+        #         check=Q(video_file_path__isnull=True) | \
+        #         Q(video_file_link__isnull=True),
+        #         name="not_both_video_links"
+        #     ),
+        #     CheckConstraint(
+        #         check=Q(subtitles_file_path__isnull=True) | \
+        #         Q(subtitles_file_link__isnull=True),
+        #         name="not_both_subtitles_links"
+        #     ),
+        # ]
         verbose_name = _("Content type video")
         verbose_name_plural = _("Content types video")
 
@@ -117,23 +135,20 @@ class ContentTypeVideo(ViewInfo, ContenttypeSpecialOrder):
         return '%s: %s' % (self.pk, self.title)
 
     def clean(self):
-        """Вызываем ValidationError, если указана ссылка
-        как на локальный файл, так и на удаленный
-        """
         super().clean()
         if (
-            (
-                self.video_file_path is not None and self.video_file_link is not None
-            ) or (
-                self.subtitles_file_path is not None and self.subtitles_file_link is not None
-            )
+            self.video_file_path is not None and
+            self.video_file_link is not None
+        ) or (
+            self.subtitles_file_path is not None and
+            self.subtitles_file_link is not None
         ):
-            raise ValidationError(
-                "Any field with postfix _path cant exists with a same prefix but with postfix _link"
-            )
-
-    def save(self, *args, **kwargs):
-        super(ContentTypeVideo, self).save(*args, **kwargs)
+            raise ValidationError(_("Any field with postfix _path cant exists with a same prefix but with postfix _link."))
+        elif (
+            self.video_file_path is None and
+            self.video_file_link is None
+        ):
+            raise ValidationError(_("On of the video_file_ field must not be empty."))
 
 
 class ContentTypeAudio(ViewInfo, ContenttypeSpecialOrder):
@@ -172,6 +187,18 @@ class ContentTypeAudio(ViewInfo, ContenttypeSpecialOrder):
     )
 
     class Meta:
+        # constraints = [
+        #     CheckConstraint(
+        #         check=Q(file_local_path__isnull=False) | \
+        #         Q(file_link__isnull=False),
+        #         name="not_both_null_audio_links"
+        #     ),
+        #     CheckConstraint(
+        #         check=Q(file_local_path__isnull=True) | \
+        #         Q(file_link__isnull=True),
+        #         name="not_both_audio_links"
+        #     ),
+        # ]
         verbose_name = _("Content type audio")
         verbose_name_plural = _("Content types audio")
 
@@ -181,10 +208,7 @@ class ContentTypeAudio(ViewInfo, ContenttypeSpecialOrder):
     def clean(self):
         super().clean()
         if (self.file_local_path is not None and self.file_link is not None):
-            raise ValidationError("Any field with postfix _path cant exists with a same prefix but with postfix _link")
-
-    def save(self, *args, **kwargs):
-        super(ContentTypeAudio, self).save(*args, **kwargs)
+            raise ValidationError(_("Any field with postfix _path cant exists with a same prefix but with postfix _link"))
 
 
 class ContentTypeText(ViewInfo, ContenttypeSpecialOrder):
