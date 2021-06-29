@@ -1,8 +1,7 @@
-import logging
 from .models import Page
 from django.shortcuts import get_object_or_404
 from django.db.models import F
-from ..test_task.celery import app
+from test_task.celery import app
 
 
 @app.task
