@@ -44,25 +44,26 @@ class PageAdmin(SimpleHistoryAdmin):
         TextInline
     )
     prepopulated_fields = {"slug": ("title",)}
-    # list_filter = ["title", ""]
     search_fields = ("title",)
     empty_value_display = "???"
     list_per_page = 50
 
 
-class VideoContentAdmin(SimpleHistoryAdmin):
+class AbstractContentAdmin(SimpleHistoryAdmin):
     search_fields = ("title",)
     readonly_fields = ("view_counter",)
 
 
-class AudioContentAdmin(SimpleHistoryAdmin):
-    search_fields = ("title",)
-    readonly_fields = ("view_counter",)
+class VideoContentAdmin(AbstractContentAdmin):
+    pass
 
 
-class TextContentAdmin(SimpleHistoryAdmin):
+class AudioContentAdmin(AbstractContentAdmin):
+    pass
+
+
+class TextContentAdmin(AbstractContentAdmin):
     search_fields = ("title", "^text")
-    readonly_fields = ("view_counter",)
 
 
 zipped_tuples = zip(
