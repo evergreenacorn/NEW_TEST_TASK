@@ -20,7 +20,7 @@ from pages import views
 
 
 router = DefaultRouter()
-router.register('pages', views.PageModelViewset,)
+router.register('pages', views.PageModelViewset)
 router.register('content_videos', views.VideoModelViewset)
 router.register('content_audios', views.AudioModelViewset)
 router.register('content_texts', views.TextModelViewset)
