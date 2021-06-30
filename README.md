@@ -53,5 +53,5 @@
 1. Выбрать директорию для проекта и/или создать для него папку.
 2. git init https://github.com/evergreenacorn/NEW_TEST_TASK.git
 3. docker-compose up
-4. docker-compose exec testtask_app cd app/ && python manage.py migrate
-5. docker-compose exec  testtask_app python manage.py createsuperuser
+4. docker-compose exec testtask_app python app/manage.py migrate
+5. docker-compose exec testtask_app python app/manage.py createsuperuser
