@@ -37,6 +37,12 @@ class PageModelViewset(AbstractReadOnlyViewset):
         "page_texts__serial_number",
     )
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        update_views_count(instance.pk)
+        return Response(serializer.data)
+
 
 class VideoModelViewset(AbstractReadOnlyViewset):
     serializer_class = ContentTypeVideoSerializer
