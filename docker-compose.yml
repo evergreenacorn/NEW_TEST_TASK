@@ -14,10 +14,10 @@ services:
             - "DB_PORT=5432"
             - "REDIS_HOST=testtask_redis"
             - "REDIS_PORT=6379"
-            - "SECRET_KEY=django-insecure-8c7f8yr9x_e4m!kng^aw1*4qn$4o!_h=)u^q5+3^d$nwbrwt1e"
+            # - "SECRET_KEY=django-insecure-8c7f8yr9x_e4m!kng^aw1*4qn$4o!_h=)u^q5+3^d$nwbrwt1e"
             # - CELERY_TIMEZONE=
             # - CELERY_ENABLE_UTC=
-        command: bash -c "cd app/test_task/ && celery -A test_task worker | python manage.py runserver 0.0.0.0:8000"
+        command: bash -c "cd app/ && celery -A test_task worker | python manage.py runserver 0.0.0.0:8000"
         volumes:
             - .:/home/python/app
         links:
@@ -33,7 +33,10 @@ services:
         image: postgres:latest
         container_name: testtask_db
         restart: 'on-failure'
-        # environment:
+        environment:
+            POSTGRES_DB: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
         #     - "POSTGRES_HOST_AUTH_METHOD=trust"  # беспарольный вход
         ports:
             - 5432:5432

@@ -30,18 +30,28 @@
    - Желательно, чтобы была **возможность задавать порядок выдачи** в API объектов, привязанных к странице.
 ***
 
-# TODO: 1. Добавить:
-- [x] Пагинациюk
+
+# Осталось сделать:
+## TODO: 1. Добавить:
+- [x] Пагинацию
 - [x] URL на API с детальной информацией
-# TODO: 2. Добавить:
+## TODO: 2. Добавить:
 - [x] Detail API, к странице должен быть привязан весь контент(обратный foreign key)
-# TODO: 3. Добавить:
+## TODO: 3. Добавить:
 - [x] Celery, выполняющий вьюху через очередь(RQ, Reddis)
 - [ ] Счетчик просмотров контента при выполнении вьюхи на просмотр detail'а страницы через таску
-# TODO: 4. Добавить:
+## TODO: 4. Добавить:
 - [x] Поиск по заголовкам + text от начала
 - [x] Inline-блоки в админке
 - [x] Вьюху на порядок выдачи связанного с моделью Page контента
 
-# TODO Final Part:
-- [ ] Упаковать все в Docker
+## TODO Final Part:
+- [x] Упаковать все в Docker
+
+
+# Как развернуть проект
+1. Выбрать директорию для проекта и/или создать для него папку.
+2. git init https://github.com/evergreenacorn/NEW_TEST_TASK.git
+3. docker-compose up
+4. docker-compose exec testtask_app cd app/ && python manage.py migrate
+5. docker-compose exec testtask_app cd app/ && python manage.py createsuperuser
