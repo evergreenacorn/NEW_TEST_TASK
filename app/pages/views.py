@@ -10,57 +10,47 @@ from .models import Page, ContentTypeVideo, ContentTypeAudio, ContentTypeText
 from .task import update_views_count
 
 
-class PageModelViewset(viewsets.ReadOnlyModelViewSet):
+class AbstractReadOnlyViewset(viewsets.ReadOnlyModelViewSet):
+    serializer_class = None
+    queryset = None
+    filter_backends = (SearchFilter, OrderingFilter)
+    search_fields = ("title", "page__title")
+    ordering_fields = (
+        "pk", "title", "serial_number", "page_id"
+    )
+    paginate_by = 20
+
+
+class PageModelViewset(AbstractReadOnlyViewset):
     serializer_class = PageSerializer
     queryset = Page.objects.prefetch_related("page_videos", "page_audios", "page_texts").all()
-    filter_backends = (SearchFilter, OrderingFilter)
     search_fields = (
         "title",
         "page_videos__title",
         "page_audios__title",
         "page_texts__title",
-        "=page_texts__text",  # матчим текст в контенте текста
     )
     ordering_fields = (
         "pk", "title",
+        "page_videos__serial_number",
+        "page_audios__serial_number",
+        "page_texts__serial_number",
     )
-    paginate_by = 20
 
 
-class VideoModelViewset(viewsets.ReadOnlyModelViewSet):
+class VideoModelViewset(AbstractReadOnlyViewset):
     serializer_class = ContentTypeVideoSerializer
-    queryset = ContentTypeVideo.objects.all()
-    paginate_by = 20
-    filter_backends = (SearchFilter, OrderingFilter)
-    search_fields = (
-        "title", "page__title"
-    )
-    ordering_fields = (
-        "pk", "title", "serial_number", "page__pk"
-    )
+    queryset = ContentTypeVideo.objects.select_related("page").all()
 
 
-class AudioModelViewset(viewsets.ReadOnlyModelViewSet):
+class AudioModelViewset(AbstractReadOnlyViewset):
     serializer_class = ContentTypeAudioSerializer
-    queryset = ContentTypeAudio.objects.all()
-    paginate_by = 20
-    filter_backends = (SearchFilter, OrderingFilter)
-    search_fields = (
-        "title", "page__title"
-    )
-    ordering_fields = (
-        "pk", "title", "serial_number", "page__pk"
-    )
+    queryset = ContentTypeAudio.objects.select_related("page").all()
 
 
-class TextModelViewset(viewsets.ReadOnlyModelViewSet):
+class TextModelViewset(AbstractReadOnlyViewset):
     serializer_class = ContentTypeTextSerializer
-    queryset = ContentTypeText.objects.all()
-    paginate_by = 20
-    filter_backends = (SearchFilter, OrderingFilter)
+    queryset = ContentTypeText.objects.select_related("page").all()
     search_fields = (
-        "title", "page__title", "=text"
-    )
-    ordering_fields = (
-        "pk", "title", "serial_number", "page__pk"
+        "title", "^text",
     )
