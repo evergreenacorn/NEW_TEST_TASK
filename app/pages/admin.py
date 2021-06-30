@@ -16,6 +16,7 @@ admin.site.index_title = _("Welcome to the admin panel of the TEST TASK project!
 
 class AbstractInline(admin.TabularInline):
     model = None
+    ordering = ("pk", "serial_number")
     readonly_fields = ("view_counter",)
     extra = 1
 
