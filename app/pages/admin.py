@@ -47,12 +47,13 @@ class PageAdmin(SimpleHistoryAdmin):
     prepopulated_fields = {"slug": ("title",)}
     search_fields = ("title",)
     empty_value_display = "???"
-    list_per_page = 50
+    list_per_page = 20
 
 
 class AbstractContentAdmin(SimpleHistoryAdmin):
     search_fields = ("title",)
     readonly_fields = ("view_counter",)
+    list_per_page = 20
 
 
 class VideoContentAdmin(AbstractContentAdmin):
