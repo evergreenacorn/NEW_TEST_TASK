@@ -1,13 +1,16 @@
-from rest_framework import renderers, viewsets, generics, mixins
-from rest_framework import permissions
+from rest_framework import viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.request import Request
 from .serializers import PageSerializer, ContentTypeVideoSerializer, ContentTypeAudioSerializer, ContentTypeTextSerializer
 from .models import Page, ContentTypeVideo, ContentTypeAudio, ContentTypeText
-# from rest_framework.decorators import detail_route
 from .task import update_views_count
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 30
 
 
 class AbstractReadOnlyViewset(viewsets.ReadOnlyModelViewSet):
@@ -18,7 +21,7 @@ class AbstractReadOnlyViewset(viewsets.ReadOnlyModelViewSet):
     ordering_fields = (
         "pk", "title", "serial_number", "page_id"
     )
-    paginate_by = 20
+    pagination_class = StandardResultsSetPagination
 
 
 class PageModelViewset(AbstractReadOnlyViewset):
