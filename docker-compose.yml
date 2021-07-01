@@ -4,19 +4,9 @@ version: "3.9"
 services:
     testtask_app:
         container_name: testtask_app
-        # image:
         build: .
-        environment:
-            - "DB_NAME=postgres"
-            - "DB_USER=postgres"
-            - "DB_PASSWORD=postgres"
-            - "DB_HOST=testtask_db"
-            - "DB_PORT=5432"
-            - "REDIS_HOST=testtask_redis"
-            - "REDIS_PORT=6379"
-            # - "SECRET_KEY=django-insecure-8c7f8yr9x_e4m!kng^aw1*4qn$4o!_h=)u^q5+3^d$nwbrwt1e"
-            # - CELERY_TIMEZONE=
-            # - CELERY_ENABLE_UTC=
+        env_file:
+            - .env_app
         command: bash -c "cd app/ && celery -A test_task worker | python manage.py runserver 0.0.0.0:8000"
         volumes:
             - .:/home/python/app
@@ -33,20 +23,16 @@ services:
         image: postgres:latest
         container_name: testtask_db
         restart: 'on-failure'
-        environment:
-            POSTGRES_DB: postgres
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-        #     - "POSTGRES_HOST_AUTH_METHOD=trust"  # беспарольный вход
+        env_file:
+            - .env_db
         ports:
             - 5432:5432
 
     testtask_redis:
         image: redis:latest
         container_name: testtask_redis
-        environment:
-            - "ALLOW_EMPTY_PASSWORD=yes"  # беспарольный вход
-            # - "REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL,CONFIG"  # для безопасности
+        env_file:
+            - .env_redis
         restart: "on-failure"
         command: redis-server
         # command: bash -c "redis-server --appendonly yes"
