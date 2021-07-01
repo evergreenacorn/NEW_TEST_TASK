@@ -22,7 +22,7 @@ services:
     testtask_db:
         image: postgres:latest
         container_name: testtask_db
-        restart: 'on-failure'
+        restart: "on-failure"
         env_file:
             - .env_db
         ports:
@@ -35,6 +35,5 @@ services:
             - .env_redis
         restart: "on-failure"
         command: redis-server
-        # command: bash -c "redis-server --appendonly yes"
         ports:
             - 6379:6379
