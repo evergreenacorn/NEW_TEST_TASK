@@ -55,6 +55,6 @@
 5. docker-compose exec testtask_app python app/manage.py createsuperuser
 
 # Как провести тесты
-1. Восстановить дамп с данными приложения командой: testtask_app python app/manage.py loaddata test_pages_content.json
+1. Восстановить дамп с данными приложения командой: docker-compose exec testtask_app python app/manage.py loaddata test_pages_content.json
 2. Перейти в /api/v1/
 3. Обновление счетчика просмотров контента на странице срабатывает при переходе на конкретную страницу, пример: /api/v1/pages/1/
