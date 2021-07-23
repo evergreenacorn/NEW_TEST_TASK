@@ -32,7 +32,7 @@
 
 # Как развернуть проект
 1. Выбрать директорию для проекта и/или создать для него папку
-2. git clone https://github.com/evergreenacorn/NEW_TEST_TASK.git
+2. git clone https://github.com/evergreenacorn/django-rest-framework_test_task.git
 3. docker-compose up
 4. docker-compose exec testtask_app python app/manage.py migrate
 5. docker-compose exec testtask_app python app/manage.py createsuperuser
